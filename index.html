@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Curiosidades</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .quiz-container {
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .question {
+      font-size: 22px;
+      margin: 25px 0;
+      color: #444;
+    }
+    .answers button {
+      display: block;
+      margin: 10px auto;
+      padding: 12px 20px;
+      font-size: 16px;
+      width: 100%;
+      max-width: 400px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #eeeeee;
+      transition: background 0.3s, transform 0.1s;
+    }
+    .answers button:hover {
+      background-color: #dddddd;
+      transform: scale(1.02);
+    }
+    .score {
+      font-size: 24px;
+      margin-top: 30px;
+      color: #2e7d32;
+    }
+    .correct {
+      background-color: #c8e6c9 !important;
+      color: #256029;
+    }
+    .wrong {
+      background-color: #ffcdd2 !important;
+      color: #c62828;
+    }
+    .restart {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background-color: #1976d2;
+      color: white;
+      cursor: pointer;
+    }
+    .restart:hover {
+      background-color: #1565c0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <h1>Quiz de Curiosidades</h1>
+    <div id="quiz">
+      <div class="question" id="question">Carregando...</div>
+      <div class="answers" id="answers"></div>
+    </div>
+    <div class="score" id="score"></div>
+  </div>
+
+  <script>
+    const quizData = [
+      {
+        question: "Qual é o maior oceano do planeta?",
+        options: ["Atlântico", "Índico", "Ártico", "Pacífico"],
+        correct: 3
+      },
+      {
+        question: "Quem pintou a Mona Lisa?",
+        options: ["Pablo Picasso", "Leonardo da Vinci", "Michelangelo", "Van Gogh"],
+        correct: 1
+      },
+      {
+        question: "Qual é o país com a maior população do mundo?",
+        options: ["Índia", "Estados Unidos", "China", "Brasil"],
+        correct: 2
+      },
+      {
+        question: "Qual elemento químico representa o símbolo 'O'?",
+        options: ["Ouro", "Oxigênio", "Ósmio", "Ozônio"],
+        correct: 1
+      },
+      {
+        question: "Qual planeta é conhecido como 'planeta vermelho'?",
+        options: ["Vênus", "Saturno", "Marte", "Júpiter"],
+        correct: 2
+      },
+      {
+        question: "Quantos corações tem um polvo?",
+        options: ["1", "2", "3", "4"],
+        correct: 2
+      },
+      {
+        question: "Qual animal é o mais rápido do mundo?",
+        options: ["Guepardo", "Falcão-peregrino", "Leopardo", "Cavalo de corrida"],
+        correct: 1
+      },
+      {
+        question: "Em que ano o homem pisou na Lua pela primeira vez?",
+        options: ["1965", "1969", "1972", "1959"],
+        correct: 1
+      },
+      {
+        question: "Qual país é famoso pelo tango?",
+        options: ["Brasil", "México", "Argentina", "Espanha"],
+        correct: 2
+      },
+      {
+        question: "Quantos planetas há no sistema solar?",
+        options: ["7", "8", "9", "10"],
+        correct: 1
+      },
+      {
+        question: "Qual instrumento mede terremotos?",
+        options: ["Termômetro", "Sismógrafo", "Barômetro", "Altímetro"],
+        correct: 1
+      },
+      {
+        question: "Qual metal é líquido à temperatura ambiente?",
+        options: ["Mercúrio", "Ferro", "Cobre", "Zinco"],
+        correct: 0
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const scoreEl = document.getElementById('score');
+    const quizContainer = document.getElementById('quiz');
+
+    function loadQuestion() {
+      const q = quizData[current];
+      questionEl.textContent = `Pergunta ${current + 1}: ${q.question}`;
+      answersEl.innerHTML = '';
+
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.onclick = () => handleAnswer(index, btn);
+        answersEl.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(index, btn) {
+      const q = quizData[current];
+      const buttons = answersEl.querySelectorAll('button');
+
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.correct) b.classList.add('correct');
+        else if (i === index) b.classList.add('wrong');
+      });
+
+      if (index === q.correct) {
+        score++;
+      }
+
+      setTimeout(() => {
+        current++;
+        if (current < quizData.length) {
+          loadQuestion();
+        } else {
+          showScore();
+        }
+      }, 1000);
+    }
+
+    function showScore() {
+      quizContainer.innerHTML = `
+        <h2>Você terminou!</h2>
+        <p class="score">Pontuação: ${score} de ${quizData.length}</p>
+        <button class="restart" onclick="restartQuiz()">Jogar novamente</button>
+      `;
+    }
+
+    function restartQuiz() {
+      location.reload(); // Recarrega a página para reiniciar tudo
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
