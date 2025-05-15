@@ -1,221 +1,293 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quiz Curiosidades</title>
+  <title>Quiz Gamificado</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #a1c4fd, #c2e9fb);
       margin: 0;
-      padding: 20px;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
     }
-    .quiz-container {
+    .container {
       background: white;
       width: 100%;
       max-width: 600px;
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       text-align: center;
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    h1 {
-      margin-bottom: 10px;
-      color: #333;
     }
     .question {
-      font-size: 22px;
-      margin: 25px 0;
-      color: #444;
+      font-size: 20px;
+      margin: 20px 0;
     }
     .answers button {
       display: block;
       margin: 10px auto;
-      padding: 12px 20px;
+      padding: 10px 20px;
       font-size: 16px;
       width: 100%;
       max-width: 400px;
-      cursor: pointer;
       border: none;
       border-radius: 8px;
-      background-color: #eeeeee;
-      transition: background 0.3s, transform 0.1s;
-    }
-    .answers button:hover {
-      background-color: #dddddd;
-      transform: scale(1.02);
-    }
-    .score {
-      font-size: 24px;
-      margin-top: 30px;
-      color: #2e7d32;
-    }
-    .correct {
-      background-color: #c8e6c9 !important;
-      color: #256029;
-    }
-    .wrong {
-      background-color: #ffcdd2 !important;
-      color: #c62828;
-    }
-    .restart {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      background-color: #1976d2;
-      color: white;
+      background-color: #f1f1f1;
       cursor: pointer;
     }
+    .answers button:hover {
+      background-color: #ddd;
+    }
+    .correct { background-color: #c8e6c9 !important; color: #256029; }
+    .wrong { background-color: #ffcdd2 !important; color: #c62828; }
+    .progress-bar {
+      height: 10px;
+      background: #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #2196f3;
+      transition: width 0.3s ease;
+    }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      padding: 20px;
+    }
+    .menu select, .menu button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      width: 80%;
+      max-width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .menu button {
+      background-color: #2196f3;
+      color: white;
+      font-weight: bold;
+    }
+    .menu button:hover {
+      background-color: #1976d2;
+    }
+    .restart {
+      margin-top: 20px;
+      background-color: #1976d2;
+      color: white;
+    }
     .restart:hover {
-      background-color: #1565c0;
+      background-color: #0f5fb3;
+    }
+    .score {
+      font-size: 22px;
+      color: #2e7d32;
+    }
+    #audioToggle {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-
-  <div class="quiz-container">
-    <h1>Quiz de Curiosidades</h1>
-    <div id="quiz">
-      <div class="question" id="question">Carregando...</div>
-      <div class="answers" id="answers"></div>
+  <div class="container" id="startScreen">
+    <h1>🎓 Quiz Interativo</h1>
+    <div class="menu">
+      <label for="difficulty">Escolha a dificuldade:</label>
+      <select id="difficulty">
+        <option value="easy">🟢 Fácil</option>
+        <option value="medium">🟡 Médio</option>
+        <option value="hard">🔴 Difícil</option>
+      </select>
+      <button onclick="startGame()">🎮 Começar Jogo</button>
+      <button id="audioToggle" onclick="toggleMusic()">🔊 Desligar música</button>
     </div>
-    <div class="score" id="score"></div>
+    <p id="bestScore"></p>
   </div>
 
+  <div class="container" id="quizScreen" style="display:none">
+    <h2 id="quizTitle">Quiz</h2>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progress"></div></div>
+    <p id="timer">Tempo: 15s</p>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+  </div>
+
+  <div class="container" id="endScreen" style="display:none">
+    <h2>Fim do Jogo!</h2>
+    <p class="score" id="finalScore"></p>
+    <p id="recordMessage"></p>
+    <button class="restart" onclick="location.reload()">🔁 Jogar novamente</button>
+  </div>
+
+  <!-- Sons -->
+  <audio id="correctSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_661143174b.mp3"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_68297c6927.mp3"></audio>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/03/13/audio_f0d6d3036d.mp3" loop></audio>
+
   <script>
-    const quizData = [
-      {
-        question: "Qual é o maior oceano do planeta?",
-        options: ["Atlântico", "Índico", "Ártico", "Pacífico"],
-        correct: 3
-      },
-      {
-        question: "Quem pintou a Mona Lisa?",
-        options: ["Pablo Picasso", "Leonardo da Vinci", "Michelangelo", "Van Gogh"],
-        correct: 1
-      },
-      {
-        question: "Qual é o país com a maior população do mundo?",
-        options: ["Índia", "Estados Unidos", "China", "Brasil"],
-        correct: 2
-      },
-      {
-        question: "Qual elemento químico representa o símbolo 'O'?",
-        options: ["Ouro", "Oxigênio", "Ósmio", "Ozônio"],
-        correct: 1
-      },
-      {
-        question: "Qual planeta é conhecido como 'planeta vermelho'?",
-        options: ["Vênus", "Saturno", "Marte", "Júpiter"],
-        correct: 2
-      },
-      {
-        question: "Quantos corações tem um polvo?",
-        options: ["1", "2", "3", "4"],
-        correct: 2
-      },
-      {
-        question: "Qual animal é o mais rápido do mundo?",
-        options: ["Guepardo", "Falcão-peregrino", "Leopardo", "Cavalo de corrida"],
-        correct: 1
-      },
-      {
-        question: "Em que ano o homem pisou na Lua pela primeira vez?",
-        options: ["1965", "1969", "1972", "1959"],
-        correct: 1
-      },
-      {
-        question: "Qual país é famoso pelo tango?",
-        options: ["Brasil", "México", "Argentina", "Espanha"],
-        correct: 2
-      },
-      {
-        question: "Quantos planetas há no sistema solar?",
-        options: ["7", "8", "9", "10"],
-        correct: 1
-      },
-      {
-        question: "Qual instrumento mede terremotos?",
-        options: ["Termômetro", "Sismógrafo", "Barômetro", "Altímetro"],
-        correct: 1
-      },
-      {
-        question: "Qual metal é líquido à temperatura ambiente?",
-        options: ["Mercúrio", "Ferro", "Cobre", "Zinco"],
-        correct: 0
-      }
-    ];
+    const quizData = {
+      easy: [
+        { q: "Qual cor se forma ao misturar azul e amarelo?", o: ["Verde", "Laranja", "Roxo", "Cinza"], a: 0 },
+        { q: "Quantas pernas tem uma aranha?", o: ["6", "8", "10", "4"], a: 1 },
+        { q: "Qual o menor planeta do sistema solar?", o: ["Terra", "Marte", "Mercúrio", "Plutão"], a: 2 },
+        { q: "Qual animal mia?", o: ["Cachorro", "Cavalo", "Gato", "Rato"], a: 2 }
+      ],
+      medium: [
+        { q: "Qual o símbolo químico do ouro?", o: ["Ag", "Au", "O", "Gd"], a: 1 },
+        { q: "Quem escreveu 'Dom Casmurro'?", o: ["Clarice Lispector", "Machado de Assis", "Graciliano Ramos", "Drummond"], a: 1 },
+        { q: "Quantos segundos tem 1 minuto?", o: ["100", "60", "80", "30"], a: 1 },
+        { q: "Qual o continente do Egito?", o: ["Ásia", "África", "Europa", "América"], a: 1 }
+      ],
+      hard: [
+        { q: "Qual a capital da Mongólia?", o: ["Katmandu", "Tashkent", "Ulaanbaatar", "Hanoi"], a: 2 },
+        { q: "Quem pintou o teto da Capela Sistina?", o: ["Da Vinci", "Van Gogh", "Michelangelo", "Rafael"], a: 2 },
+        { q: "Qual é o número atômico do carbono?", o: ["12", "6", "8", "14"], a: 1 },
+        { q: "Quem criou a teoria da relatividade?", o: ["Newton", "Einstein", "Galileu", "Bohr"], a: 1 }
+      ]
+    };
 
-    let current = 0;
-    let score = 0;
+    const startScreen = document.getElementById("startScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const endScreen = document.getElementById("endScreen");
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const finalScore = document.getElementById("finalScore");
+    const recordMessage = document.getElementById("recordMessage");
+    const bestScore = document.getElementById("bestScore");
+    const timerEl = document.getElementById("timer");
+    const progress = document.getElementById("progress");
+    const bgMusic = document.getElementById("bgMusic");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
 
-    const questionEl = document.getElementById('question');
-    const answersEl = document.getElementById('answers');
-    const scoreEl = document.getElementById('score');
-    const quizContainer = document.getElementById('quiz');
+    correctSound.volume = 0.6;
+    wrongSound.volume = 0.6;
+    bgMusic.volume = 0.4;
 
-    function loadQuestion() {
-      const q = quizData[current];
-      questionEl.textContent = `Pergunta ${current + 1}: ${q.question}`;
-      answersEl.innerHTML = '';
+    let currentQuiz = [], currentQuestion = 0, score = 0;
+    let timer, timeLeft = 15;
 
-      q.options.forEach((option, index) => {
-        const btn = document.createElement('button');
-        btn.textContent = option;
-        btn.onclick = () => handleAnswer(index, btn);
+    function startGame() {
+      const difficulty = document.getElementById("difficulty").value;
+      currentQuiz = [...quizData[difficulty]];
+      shuffleArray(currentQuiz);
+      score = 0;
+      currentQuestion = 0;
+      startScreen.style.display = "none";
+      quizScreen.style.display = "block";
+      showQuestion();
+      updateBestScore();
+
+      // Ativa música após interação
+      bgMusic.play().catch(err => {
+        console.warn("Erro ao iniciar música:", err);
+      });
+    }
+
+    function showQuestion() {
+      if (currentQuestion >= currentQuiz.length) return endGame();
+      const q = currentQuiz[currentQuestion];
+      questionEl.textContent = q.q;
+      answersEl.innerHTML = "";
+      q.o.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(idx);
         answersEl.appendChild(btn);
       });
-    }
-
-    function handleAnswer(index, btn) {
-      const q = quizData[current];
-      const buttons = answersEl.querySelectorAll('button');
-
-      buttons.forEach((b, i) => {
-        b.disabled = true;
-        if (i === q.correct) b.classList.add('correct');
-        else if (i === index) b.classList.add('wrong');
-      });
-
-      if (index === q.correct) {
-        score++;
-      }
-
-      setTimeout(() => {
-        current++;
-        if (current < quizData.length) {
-          loadQuestion();
-        } else {
-          showScore();
+      timeLeft = 15;
+      updateTimer();
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          selectAnswer(-1);
         }
       }, 1000);
+      updateProgress();
     }
 
-    function showScore() {
-      quizContainer.innerHTML = `
-        <h2>Você terminou!</h2>
-        <p class="score">Pontuação: ${score} de ${quizData.length}</p>
-        <button class="restart" onclick="restartQuiz()">Jogar novamente</button>
-      `;
+    function updateProgress() {
+      const percent = (currentQuestion / currentQuiz.length) * 100;
+      progress.style.width = percent + "%";
     }
 
-    function restartQuiz() {
-      location.reload(); // Recarrega a página para reiniciar tudo
+    function updateTimer() {
+      timerEl.textContent = `Tempo: ${timeLeft}s`;
     }
 
-    loadQuestion();
+    function selectAnswer(choice) {
+      clearInterval(timer);
+      const correct = currentQuiz[currentQuestion].a;
+      const buttons = answersEl.querySelectorAll("button");
+      buttons.forEach((btn, idx) => {
+        if (idx === correct) btn.classList.add("correct");
+        else if (idx === choice) btn.classList.add("wrong");
+        btn.disabled = true;
+      });
+      if (choice === correct) {
+        score++;
+        correctSound.play();
+      } else {
+        wrongSound.play();
+      }
+      setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+      }, 1500);
+    }
+
+    function endGame() {
+      quizScreen.style.display = "none";
+      endScreen.style.display = "block";
+      finalScore.textContent = `Você acertou ${score} de ${currentQuiz.length} perguntas.`;
+      const best = +localStorage.getItem("bestScore") || 0;
+      if (score > best) {
+        localStorage.setItem("bestScore", score);
+        recordMessage.textContent = "🏆 Novo recorde!";
+      } else {
+        recordMessage.textContent = `Seu recorde: ${best}`;
+      }
+    }
+
+    function updateBestScore() {
+      const best = +localStorage.getItem("bestScore") || 0;
+      bestScore.textContent = `🔝 Seu recorde: ${best}`;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function toggleMusic() {
+      if (bgMusic.paused) {
+        bgMusic.play();
+        document.getElementById("audioToggle").textContent = "🔊 Desligar música";
+      } else {
+        bgMusic.pause();
+        document.getElementById("audioToggle").textContent = "🔈 Ligar música";
+      }
+    }
   </script>
 </body>
 </html>
